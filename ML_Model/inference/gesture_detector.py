@@ -60,10 +60,31 @@ class HandGestureDetector:
 
 if __name__ == '__main__':
     detector = HandGestureDetector()
-    cap = cv2.VideoCapture(0) # 0 for default webcam
+    
+    cap = None
+    # Prioritize camera index 1 first, as it's likely the built-in Mac camera.
+    print(f"Attempting to open camera at index 1 (prioritized)...")
+    cap = cv2.VideoCapture(1)
+    if cap.isOpened():
+        print(f"Successfully opened camera at index 1")
+    else:
+        print(f"Failed to open camera at index 1. Falling back to other indices...")
+        cap = None # Reset cap if 1 fails
 
-    if not cap.isOpened():
-        print("Error: Could not open webcam.")
+        # Then try other common indices if the prioritized one failed
+        for i in range(5): # Try indices from 0 to 4
+            if i == 1: continue # Skip index 1 as we already tried it
+            print(f"Attempting to open camera at index {i}...")
+            cap = cv2.VideoCapture(i) 
+            if cap.isOpened():
+                print(f"Successfully opened camera at index {i}")
+                break
+            else:
+                print(f"Failed to open camera at index {i}")
+                cap = None
+
+    if cap is None:
+        print("Error: Could not open any webcam. Please ensure a webcam is connected and accessible.")
         exit()
 
     print("Webcam opened. Press 'q' to quit.")

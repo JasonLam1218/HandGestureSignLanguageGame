@@ -43,18 +43,55 @@ public class WebcamManager : MonoBehaviour
             return;
         }
 
-        // Find a suitable webcam
-        WebCamDevice frontCam = WebCamTexture.devices[0]; // Default to first available
-        foreach (var camDevice in WebCamTexture.devices)
+        WebCamDevice selectedCam = devices[0]; // Default to the first available camera
+        bool camFound = false;
+
+        // 1. Try to find a specific built-in macOS camera (e.g., MacBook's camera)
+        string[] macBuiltInCameraNames = {"FaceTime HD Camera", "iSight Camera", "Built-in iSight", "Apple Camera"};
+
+        foreach (var camDevice in devices)
         {
-            if (camDevice.isFrontFacing)
+            foreach (string name in macBuiltInCameraNames)
             {
-                frontCam = camDevice;
-                break;
+                if (camDevice.name.Contains(name))
+                {
+                    selectedCam = camDevice;
+                    camFound = true;
+                    Debug.Log($"Selected built-in Mac camera: {selectedCam.name}");
+                    break; // Found a built-in Mac camera, stop searching
+                }
             }
+            if (camFound) break;
         }
 
-        webcamTexture = new WebCamTexture(frontCam.name, requestedWidth, requestedHeight, requestedFPS);
+        // 2. If no specific Mac camera found, try to find any front-facing camera (original logic)
+        if (!camFound)
+        {
+            foreach (var camDevice in devices)
+            {
+                if (camDevice.isFrontFacing)
+                {
+                    selectedCam = camDevice;
+                    camFound = true;
+                    Debug.Log($"Selected front-facing camera (fallback): {selectedCam.name}");
+                    break;
+                }
+            }
+        }
+        
+        // 3. If still no suitable camera, use the default (first available device)
+        if (!camFound && devices.Length > 0)
+        {
+             Debug.Log($"No specific built-in or front-facing camera found, using default: {selectedCam.name}");
+        }
+        else if (!camFound && devices.Length == 0)
+        {
+            Debug.LogError("No camera devices available to select.");
+            isWebcamReady = false;
+            return;
+        }
+
+        webcamTexture = new WebCamTexture(selectedCam.name, requestedWidth, requestedHeight, requestedFPS);
         webcamTexture.Play();
 
         if (webcamTexture.isPlaying)
