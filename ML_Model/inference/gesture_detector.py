@@ -1,9 +1,11 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+import tensorflow as tf
+import os
 
 class HandGestureDetector:
-    def __init__(self):
+    def __init__(self, model_path='trained_gesture_model.h5', label_map_path='label_map.txt'):
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(
             static_image_mode=False,
@@ -12,6 +14,40 @@ class HandGestureDetector:
             min_tracking_confidence=0.5
         )
         self.mp_draw = mp.solutions.drawing_utils
+
+        self.model = None
+        self.label_map = {}
+        self.load_model_and_labels(model_path, label_map_path)
+
+    def load_model_and_labels(self, model_path, label_map_path):
+        # Load the trained Keras model
+        if os.path.exists(model_path):
+            print(f"Loading gesture classification model from {model_path}...")
+            try:
+                self.model = tf.keras.models.load_model(model_path)
+                print("Model loaded successfully.")
+                if self.model:
+                    print(f"Model expected input shape: {self.model.input_shape}")
+            except Exception as e:
+                print(f"Error loading model: {e}")
+                self.model = None
+        else:
+            print(f"Warning: Model file not found at {model_path}. Gesture classification will not work.")
+
+        # Load the label map
+        if os.path.exists(label_map_path):
+            print(f"Loading label map from {label_map_path}...")
+            try:
+                with open(label_map_path, 'r') as f:
+                    for line in f:
+                        gesture, label_id = line.strip().split(':')
+                        self.label_map[int(label_id)] = gesture
+                print(f"Label map loaded: {self.label_map}")
+            except Exception as e:
+                print(f"Error loading label map: {e}")
+                self.label_map = {}
+        else:
+            print(f"Warning: Label map file not found at {label_map_path}. Gesture classification will return numerical IDs.")
 
     def detect_gesture(self, frame):
         """
@@ -33,7 +69,7 @@ class HandGestureDetector:
                     self.mp_hands.HAND_CONNECTIONS
                 )
                 
-                # Convert landmarks to numpy array
+                # Convert landmarks to numpy array (x, y, z for 21 points)
                 landmarks = np.array([[lm.x, lm.y, lm.z] for lm in hand_landmarks.landmark])
                 return landmarks, frame
         
@@ -41,16 +77,36 @@ class HandGestureDetector:
 
     def process_landmarks(self, landmarks):
         """
-        Process landmarks to identify the gesture
-        Returns: gesture_name
+        Process landmarks to identify the gesture using the loaded ML model.
+        Returns: gesture_name (str) or None if no valid gesture detected.
         """
-        if landmarks is None:
+        if landmarks is None or self.model is None:
             return None
+
+        try:
+            print(f"Shape of landmarks before reshape: {landmarks.shape}")
+            # Reshape keypoints to (1, 21, 3) for model prediction
+            keypoints = landmarks.reshape(1, 21, 3)
+            print(f"Shape of keypoints after reshape: {keypoints.shape}")
             
-        # TODO: Implement gesture classification logic
-        # This will be implemented based on your specific sign language requirements
-        
-        return "unknown"
+            # Predict gesture
+            predictions = self.model.predict(keypoints, verbose=0)
+            predicted_class_index = np.argmax(predictions)
+            confidence = predictions[0][predicted_class_index]
+
+            print(f"Raw predictions: {predictions}")
+            print(f"Predicted class index: {predicted_class_index}, Confidence: {confidence:.2f}")
+
+            # Optional: Set a confidence threshold
+            if confidence < 0.7:
+                return "Unknown"
+
+            predicted_gesture = self.label_map.get(predicted_class_index, "Unknown")
+
+            return predicted_gesture
+        except Exception as e:
+            print(f"Error during landmark processing: {e}")
+            return None
 
     def release(self):
         """
@@ -59,32 +115,20 @@ class HandGestureDetector:
         self.hands.close()
 
 if __name__ == '__main__':
-    detector = HandGestureDetector()
+    # The model and label map are expected in the current working directory (ML_Model/)
+    detector = HandGestureDetector(
+        model_path='trained_gesture_model.h5',
+        label_map_path='label_map.txt'
+    )
     
     cap = None
-    # Prioritize camera index 1 first, as it's likely the built-in Mac camera.
-    print(f"Attempting to open camera at index 1 (prioritized)...")
-    cap = cv2.VideoCapture(1)
-    if cap.isOpened():
-        print(f"Successfully opened camera at index 1")
-    else:
-        print(f"Failed to open camera at index 1. Falling back to other indices...")
-        cap = None # Reset cap if 1 fails
+    
+    # Attempt to open the built-in camera at index 2 (commonly observed on some macOS setups)
+    print(f"Attempting to open camera at index 2 with AVFoundation backend...")
+    cap = cv2.VideoCapture(2, cv2.CAP_AVFOUNDATION) 
 
-        # Then try other common indices if the prioritized one failed
-        for i in range(5): # Try indices from 0 to 4
-            if i == 1: continue # Skip index 1 as we already tried it
-            print(f"Attempting to open camera at index {i}...")
-            cap = cv2.VideoCapture(i) 
-            if cap.isOpened():
-                print(f"Successfully opened camera at index {i}")
-                break
-            else:
-                print(f"Failed to open camera at index {i}")
-                cap = None
-
-    if cap is None:
-        print("Error: Could not open any webcam. Please ensure a webcam is connected and accessible.")
+    if not cap.isOpened():
+        print("Error: Could not open camera at index 2. Please ensure it is connected and accessible, and check macOS camera permissions for your terminal application.")
         exit()
 
     print("Webcam opened. Press 'q' to quit.")
@@ -92,7 +136,7 @@ if __name__ == '__main__':
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("Error: Could not read frame.")
+            print("Error: Could not read frame from camera. It might have disconnected or is in use by another application.")
             break
 
         landmarks, processed_frame = detector.detect_gesture(frame)
