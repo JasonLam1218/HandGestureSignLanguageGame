@@ -3,6 +3,12 @@ import mediapipe as mp
 import numpy as np
 import tensorflow as tf
 import os
+import asyncio
+import json
+import websockets
+
+# WebSocket server URL
+WEBSOCKET_SERVER_URL = "ws://localhost:3000"
 
 class HandGestureDetector:
     def __init__(self, model_path='ML_Model/trained_gesture_model.h5', label_map_path='ML_Model/label_map.txt'):
@@ -121,34 +127,16 @@ class HandGestureDetector:
         """
         self.hands.close()
 
-if __name__ == '__main__':
-    # The model and label map are expected in the current working directory (ML_Model/)
-    detector = HandGestureDetector(
-        model_path='ML_Model/trained_gesture_model.h5',
-        label_map_path='ML_Model/label_map.txt'
-    )
-    
-    cap = None
-    
-    # Attempt to open the built-in camera by trying common indices
-    # for i in range(5): # Try camera indices from 0 to 4
-    #     print(f"Attempting to open camera at index {i} with AVFoundation backend...")
-    #     cap = cv2.VideoCapture(2, cv2.CAP_AVFOUNDATION) 
-    #     if cap.isOpened():
-    #         print(f"Successfully opened camera at index {i}.")
-    #         break
-    #     else:
-    #         print(f"Could not open camera at index {i}.")
+async def send_gesture_to_websocket(data):
+    try:
+        async with websockets.connect(WEBSOCKET_SERVER_URL) as websocket:
+            await websocket.send(json.dumps(data))
+            print(f"Sent: {data}") # For debugging
+    except Exception as e:
+        # print(f"Could not send data to WebSocket server: {e}") # For debugging
+        pass # Suppress repeated connection errors if server is not yet up
 
-    cap = cv2.VideoCapture(2, cv2.CAP_AVFOUNDATION) 
-
-    if not cap or not cap.isOpened():
-        print("Error: Could not open any camera. Please ensure your camera is connected and accessible,")
-        print("and check your operating system's camera permissions for the application running this script.")
-        exit()
-
-    print("Webcam opened. Press 'q' to quit.")
-
+async def main(detector, cap):
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -175,6 +163,12 @@ if __name__ == '__main__':
                     cv2.putText(processed_frame, display_text, (10, 30 + i * 40), 
                                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
+                    # Send gesture data over WebSocket
+                    asyncio.ensure_future(send_gesture_to_websocket({
+                        "gesture": gesture,
+                        "handedness": handedness
+                    }))
+
         cv2.imshow('Hand Gesture Recognition', processed_frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -182,4 +176,36 @@ if __name__ == '__main__':
 
     cap.release()
     cv2.destroyAllWindows()
-    detector.release() 
+    detector.release()
+
+if __name__ == '__main__':
+    # The model and label map are expected in the current working directory (ML_Model/)
+    detector = HandGestureDetector(
+        model_path='ML_Model/trained_gesture_model.h5',
+        label_map_path='ML_Model/label_map.txt'
+    )
+    
+    cap = None
+    
+    # Attempt to open the built-in camera by trying common indices
+    # for i in range(5): # Try camera indices from 0 to 4
+    #     print(f"Attempting to open camera at index {i} with AVFoundation backend...")
+    #     cap = cv2.VideoCapture(i, cv2.CAP_AVFOUNDATION) 
+    #     if cap.isOpened():
+    #         print(f"Successfully opened camera at index {i}.")
+    #         break
+    #     else:
+    #         print(f"Could not open camera at index {i}.")
+
+    cap = cv2.VideoCapture(2, cv2.CAP_AVFOUNDATION) 
+
+    if not cap or not cap.isOpened():
+        print("Error: Could not open any camera. Please ensure your camera is connected and accessible,")
+        print("and check your operating system's camera permissions for the application running this script.")
+        exit()
+
+    print("Webcam opened. Press 'q' to quit.")
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main(detector, cap))
+    loop.close() 

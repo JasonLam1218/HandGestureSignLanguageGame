@@ -72,11 +72,28 @@ This terminal will run your hand gesture recognition backend.
     ```bash
     pip install -r requirements.txt
     ```
-5.  **Start the hand gesture detection script:**
+    *This will install all necessary libraries like TensorFlow, MediaPipe, and OpenCV.*
+5.  **Collect Hand Gesture Data:**
+    Before training your model, you need to collect data for each gesture. The `data_collection.py` script will guide you through this process.
+    *   **Ensure Iriun Webcam (or your preferred camera) is running and accessible.**
+    *   Run the data collection script from the `ML_Model` directory:
+        ```bash
+        python data_collection.py
+        ```
+    *   Follow the on-screen prompts to perform each gesture (e.g., "Thumbs Up", "One Finger", "Two Fingers"). Make sure to allow the script to collect the specified number of samples for *each* gesture. The data will be saved in the `ML_Model/data/` directory.
+6.  **Train the ML Model:**
+    Once you have collected the data, train your model using the `model.py` script. This will create or update the `trained_gesture_model.h5` and `label_map.txt` files.
+    ```bash
+    python train/model.py
+    ```
+    *This process might take a few minutes depending on your system and dataset size.*
+7.  **Run the Hand Gesture Detection Script (Inference):**
+    After training, you can run the `gesture_detector.py` script to see real-time hand gesture recognition. This script will open your webcam feed and display the detected gestures, indicating whether it's a 'Left Hand' or 'Right Hand' gesture.
+    *   **Ensure Iriun Webcam (or your preferred camera) is running and accessible.**
     ```bash
     python inference/gesture_detector.py
     ```
-    *This should open a window with your webcam feed. Keep this terminal running in the background.*
+    *You should see a window with your webcam feed and recognized gestures. Keep this terminal running in the background for the game to interact with it.*
 
 ### Terminal 2: Web Server
 
@@ -138,6 +155,51 @@ This is the Unity Editor, used for building the game. This needs to be done **on
 ### Playing the Game
 
 Once all the above steps are completed (ML Model Server and Web Server running, Unity game built to `WebServer/public`):
+
+#### Real-time Gesture Recognition Data Flow
+
+This diagram illustrates the comprehensive data flow across the various components of the Hand Gesture Sign Language Game, from real-time gesture detection to game interaction and data persistence.
+
+```
++--------------------------+
+| Python ML Model Server   |
+| (Gesture Detection)      |
++--------------------------+
+           |
+           | 1. Webcam Video Feed (Input)
+           |    - MediaPipe: Hand Landmarks & Handedness
+           |    - TensorFlow: Gesture Prediction
+           |
+           v
++--------------------------+  2. Gesture Data (JSON)  +------------------------+
+|   WebSocket Client       |------------------------->|   WebSocket Server     |
++--------------------------+   (ws://localhost:3000)  +------------------------+
+                                                        |                        |
+                                                        |  Node.js Web Server    |
+                                                        |     (Central Hub)      |
+                                                        |                        | 6. Save/Load Game State
++------------------------+  5. Game State Data        +------------------------+  (e.g., Score, Progress)
+|     HTTP Server        |<---------------------------|  Database Interaction  |<----------------->+---------------------+
+| (Serves Game Files)    |  (HTTP POST or WebSocket)  |      (Mongoose)        |                   |      Database       |
++------------------------+                            +------------------------+                   |      (MongoDB)      |
+           ^                                                        |                              +---------------------+
+           | 4. GET / (Initial Load)                                | 3. Relay Gesture Data (JSON)
+           |                                                        |
+           |                                                        v
++--------------------------+                            +------------------------+
+|      Unity Game          |<---------------------------|   WebSocket Server     |
+|    (Running in Browser)  |   (ws://localhost:3000)     +------------------------+
++--------------------------+
+           |
+           | 7. Apply Gesture to Game Logic
+           |    - e.g., "Thumbs Up" -> "Good!"
+           v
++--------------------------+
+|      In-Game Action      |
++--------------------------+
+```
+
+---
 
 1.  Ensure both your **ML Model Server** (Terminal 1) and **Web Server** (Terminal 2) are actively running.
 2.  Open your web browser (Chrome, Firefox, or Edge are recommended).
