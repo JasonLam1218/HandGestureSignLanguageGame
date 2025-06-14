@@ -3,7 +3,7 @@ from tensorflow.keras import layers, models
 import numpy as np
 import os
 
-def create_gesture_model(input_shape=(21, 3), num_classes=10):
+def create_gesture_model(input_shape=(21, 3), num_classes=1):
     """
     Creates a simple Keras model for gesture recognition.
     Input shape (21, 3) for 21 hand landmarks (x, y, z).
@@ -38,25 +38,31 @@ def load_data(data_dir='./data'):
     num_samples_per_class = 100
     num_landmarks = 21
     num_dimensions = 3
-    gesture_names = ["A", "B", "C", "D", "E"]
+    # Only train for "Thumbs Up"
+    gesture_names = ["Thumbs Up"]
 
     for i, gesture_name in enumerate(gesture_names):
         label_map[gesture_name] = current_label
+        # In a real scenario, you would load actual landmark data here.
+        # For demonstration, we continue with dummy data generation.
         for _ in range(num_samples_per_class):
-            # Generate random landmarks for demonstration
+            # Replace this with loading actual landmark data for 'gesture_name'
+            # For example: np.load(f'{data_dir}/{gesture_name}/sample_{_}.npy')
             dummy_landmarks = np.random.rand(num_landmarks, num_dimensions).astype(np.float32)
             X.append(dummy_landmarks)
             y.append(current_label)
         current_label += 1
     
     print(f"Loaded {len(X)} samples with {len(label_map)} classes.")
+    # Ensure the label map includes all defined gesture names
+    print(f"Generated label map: {label_map}")
     return np.array(X), np.array(y), label_map
 
 
 if __name__ == '__main__':
     # TODO: Replace with your actual dataset loading and preprocessing
     X_train, y_train, label_map = load_data()
-    num_classes = len(label_map)
+    num_classes = len(label_map) # This will now be 1
     input_shape = X_train.shape[1:]
 
     model = create_gesture_model(input_shape=input_shape, num_classes=num_classes)

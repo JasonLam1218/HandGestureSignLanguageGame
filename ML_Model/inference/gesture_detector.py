@@ -123,12 +123,19 @@ if __name__ == '__main__':
     
     cap = None
     
-    # Attempt to open the built-in camera at index 2 (commonly observed on some macOS setups)
-    print(f"Attempting to open camera at index 2 with AVFoundation backend...")
-    cap = cv2.VideoCapture(2, cv2.CAP_AVFOUNDATION) 
+    # Attempt to open the built-in camera by trying common indices
+    for i in range(5): # Try camera indices from 0 to 4
+        print(f"Attempting to open camera at index {i} with AVFoundation backend...")
+        cap = cv2.VideoCapture(i, cv2.CAP_AVFOUNDATION) 
+        if cap.isOpened():
+            print(f"Successfully opened camera at index {i}.")
+            break
+        else:
+            print(f"Could not open camera at index {i}.")
 
-    if not cap.isOpened():
-        print("Error: Could not open camera at index 2. Please ensure it is connected and accessible, and check macOS camera permissions for your terminal application.")
+    if not cap or not cap.isOpened():
+        print("Error: Could not open any camera. Please ensure your camera is connected and accessible,")
+        print("and check your operating system's camera permissions for the application running this script.")
         exit()
 
     print("Webcam opened. Press 'q' to quit.")
@@ -143,7 +150,10 @@ if __name__ == '__main__':
         gesture = detector.process_landmarks(landmarks)
 
         if gesture:
-            cv2.putText(processed_frame, f'Gesture: {gesture}', (10, 30), 
+            display_text = f'Gesture: {gesture}'
+            if gesture == "Thumbs Up":
+                display_text = "Good!"
+            cv2.putText(processed_frame, display_text, (10, 30), 
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
         cv2.imshow('Hand Gesture Recognition', processed_frame)
