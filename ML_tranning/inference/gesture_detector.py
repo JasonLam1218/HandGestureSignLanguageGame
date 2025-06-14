@@ -124,14 +124,16 @@ if __name__ == '__main__':
     cap = None
     
     # Attempt to open the built-in camera by trying common indices
-    for i in range(5): # Try camera indices from 0 to 4
-        print(f"Attempting to open camera at index {i} with AVFoundation backend...")
-        cap = cv2.VideoCapture(i, cv2.CAP_AVFOUNDATION) 
-        if cap.isOpened():
-            print(f"Successfully opened camera at index {i}.")
-            break
-        else:
-            print(f"Could not open camera at index {i}.")
+    # for i in range(5): # Try camera indices from 0 to 4
+    #     print(f"Attempting to open camera at index {i} with AVFoundation backend...")
+    #     cap = cv2.VideoCapture(2, cv2.CAP_AVFOUNDATION) 
+    #     if cap.isOpened():
+    #         print(f"Successfully opened camera at index {i}.")
+    #         break
+    #     else:
+    #         print(f"Could not open camera at index {i}.")
+
+    cap = cv2.VideoCapture(2, cv2.CAP_AVFOUNDATION) 
 
     if not cap or not cap.isOpened():
         print("Error: Could not open any camera. Please ensure your camera is connected and accessible,")
