@@ -1,23 +1,17 @@
 {
-  "name": "sign-language-game-server",
+  "name": "hand-gesture-sign-language-game",
   "version": "1.0.0",
-  "description": "Web server for Hand Gesture Sign Language Game",
+  "description": "A web server for a hand gesture sign language game (non-Unity version)",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^7.5.0",
-    "socket.io": "^4.7.2",
-    "ws": "^8.18.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
+    "express": "^4.19.2",
+    "ws": "^8.16.0"
   }
 }

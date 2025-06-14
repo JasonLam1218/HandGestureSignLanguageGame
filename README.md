@@ -174,21 +174,21 @@ This diagram illustrates the comprehensive data flow across the various componen
 +--------------------------+  2. Gesture Data (JSON)  +------------------------+
 |   WebSocket Client       |------------------------->|   WebSocket Server     |
 +--------------------------+   (ws://localhost:3000)  +------------------------+
-                                                        |                        |
-                                                        |  Node.js Web Server    |
-                                                        |     (Central Hub)      |
-                                                        |                        | 6. Save/Load Game State
-+------------------------+  5. Game State Data        +------------------------+  (e.g., Score, Progress)
-|     HTTP Server        |<---------------------------|  Database Interaction  |<----------------->+---------------------+
-| (Serves Game Files)    |  (HTTP POST or WebSocket)  |      (Mongoose)        |                   |      Database       |
-+------------------------+                            +------------------------+                   |      (MongoDB)      |
-           ^                                                        |                              +---------------------+
+                                                      |                        |
+                                                      |  Node.js Web Server    | 
+                                                      |     (Central Hub)      |
+                                                      |                        | 6. Save/Load Game State
++------------------------+  5. Game State Data        +------------------------+  (e.g., Score, Progress)  +---------------------+
+|     HTTP Server        |<---------------------------|  Database Interaction  |<------------------------->|      Database       |
+| (Serves Game Files)    |  (HTTP POST or WebSocket)  |      (Mongoose)        |                           |      (MongoDB)      |
++------------------------+                            +------------------------+                           +---------------------+
+           ^                                                        |                                      
            | 4. GET / (Initial Load)                                | 3. Relay Gesture Data (JSON)
            |                                                        |
            |                                                        v
 +--------------------------+                            +------------------------+
 |      Unity Game          |<---------------------------|   WebSocket Server     |
-|    (Running in Browser)  |   (ws://localhost:3000)     +------------------------+
+|    (Running in Browser)  |   (ws://localhost:3000)    +------------------------+
 +--------------------------+
            |
            | 7. Apply Gesture to Game Logic
