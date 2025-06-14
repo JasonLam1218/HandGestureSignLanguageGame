@@ -5,7 +5,7 @@ import tensorflow as tf
 import os
 
 class HandGestureDetector:
-    def __init__(self, model_path='trained_gesture_model.h5', label_map_path='label_map.txt'):
+    def __init__(self, model_path='ML_Model/trained_gesture_model.h5', label_map_path='ML_Model/label_map.txt'):
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(
             static_image_mode=False,
@@ -117,8 +117,8 @@ class HandGestureDetector:
 if __name__ == '__main__':
     # The model and label map are expected in the current working directory (ML_Model/)
     detector = HandGestureDetector(
-        model_path='trained_gesture_model.h5',
-        label_map_path='label_map.txt'
+        model_path='ML_Model/trained_gesture_model.h5',
+        label_map_path='ML_Model/label_map.txt'
     )
     
     cap = None
@@ -153,6 +153,10 @@ if __name__ == '__main__':
             display_text = f'Gesture: {gesture}'
             if gesture == "Thumbs Up":
                 display_text = "Good!"
+            elif gesture == "One Finger":
+                display_text = "1"
+            elif gesture == "Two Fingers":
+                display_text = "2"
             cv2.putText(processed_frame, display_text, (10, 30), 
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 

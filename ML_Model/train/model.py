@@ -25,7 +25,7 @@ def create_gesture_model(input_shape=(21, 3), num_classes=1):
 
 def load_data(data_dir='./data'):
     """
-    Loads dummy data for training. Replace with actual data loading.
+    Loads actual data for training.
     Assumes data is structured: data_dir/gesture_name/sample.npy
     """
     print(f"Loading data from {data_dir}...")
@@ -34,23 +34,23 @@ def load_data(data_dir='./data'):
     label_map = {}
     current_label = 0
 
-    # Dummy data generation
-    num_samples_per_class = 100
-    num_landmarks = 21
-    num_dimensions = 3
-    # Only train for "Thumbs Up"
-    gesture_names = ["Thumbs Up"]
+    gesture_names = sorted([d for d in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, d))])
+    if not gesture_names:
+        print(f"No gesture directories found in {data_dir}. Please run data_collection.py first.")
+        return np.array([]), np.array([]), {}
 
-    for i, gesture_name in enumerate(gesture_names):
+    for gesture_name in gesture_names:
         label_map[gesture_name] = current_label
-        # In a real scenario, you would load actual landmark data here.
-        # For demonstration, we continue with dummy data generation.
-        for _ in range(num_samples_per_class):
-            # Replace this with loading actual landmark data for 'gesture_name'
-            # For example: np.load(f'{data_dir}/{gesture_name}/sample_{_}.npy')
-            dummy_landmarks = np.random.rand(num_landmarks, num_dimensions).astype(np.float32)
-            X.append(dummy_landmarks)
-            y.append(current_label)
+        gesture_path = os.path.join(data_dir, gesture_name)
+        for sample_file in os.listdir(gesture_path):
+            if sample_file.endswith('.npy'):
+                sample_path = os.path.join(gesture_path, sample_file)
+                try:
+                    landmarks = np.load(sample_path)
+                    X.append(landmarks)
+                    y.append(current_label)
+                except Exception as e:
+                    print(f"Error loading {sample_path}: {e}")
         current_label += 1
     
     print(f"Loaded {len(X)} samples with {len(label_map)} classes.")
@@ -61,7 +61,7 @@ def load_data(data_dir='./data'):
 
 if __name__ == '__main__':
     # TODO: Replace with your actual dataset loading and preprocessing
-    X_train, y_train, label_map = load_data()
+    X_train, y_train, label_map = load_data(data_dir='./data')
     num_classes = len(label_map) # This will now be 1
     input_shape = X_train.shape[1:]
 
@@ -73,12 +73,12 @@ if __name__ == '__main__':
     model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.2)
 
     # Save the trained model
-    model_save_path = 'trained_gesture_model.h5'
+    model_save_path = 'ML_Model/trained_gesture_model.h5'
     model.save(model_save_path)
     print(f"Model saved to {model_save_path}")
 
     # Save label map for inference
-    label_map_path = 'label_map.txt'
+    label_map_path = 'ML_Model/label_map.txt'
     with open(label_map_path, 'w') as f:
         for gesture, label_id in label_map.items():
             f.write(f'{gesture}:{label_id}\n')
