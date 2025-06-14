@@ -1,0 +1,4 @@
+One Finger:0
+Peace Sign:1
+Thumbs Up:2
+Two Fingers:3
