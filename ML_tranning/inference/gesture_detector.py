@@ -9,7 +9,7 @@ class HandGestureDetector:
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(
             static_image_mode=False,
-            max_num_hands=1,
+            max_num_hands=2,
             min_detection_confidence=0.7,
             min_tracking_confidence=0.5
         )
@@ -62,7 +62,8 @@ class HandGestureDetector:
         
         # Draw hand landmarks on the frame
         if results.multi_hand_landmarks:
-            for hand_landmarks in results.multi_hand_landmarks:
+            all_hand_data = []
+            for i, hand_landmarks in enumerate(results.multi_hand_landmarks):
                 self.mp_draw.draw_landmarks(
                     frame,
                     hand_landmarks,
@@ -71,7 +72,13 @@ class HandGestureDetector:
                 
                 # Convert landmarks to numpy array (x, y, z for 21 points)
                 landmarks = np.array([[lm.x, lm.y, lm.z] for lm in hand_landmarks.landmark])
-                return landmarks, frame
+                
+                # Get handedness (left/right hand)
+                handedness_classification = results.multi_handedness[i].classification[0]
+                handedness = handedness_classification.label
+                
+                all_hand_data.append({'landmarks': landmarks, 'handedness': handedness})
+            return all_hand_data, frame
         
         return None, frame
 
@@ -148,19 +155,25 @@ if __name__ == '__main__':
             print("Error: Could not read frame from camera. It might have disconnected or is in use by another application.")
             break
 
-        landmarks, processed_frame = detector.detect_gesture(frame)
-        gesture = detector.process_landmarks(landmarks)
+        all_hand_data, processed_frame = detector.detect_gesture(frame)
 
-        if gesture:
-            display_text = f'Gesture: {gesture}'
-            if gesture == "Thumbs Up":
-                display_text = "Good!"
-            elif gesture == "One Finger":
-                display_text = "1"
-            elif gesture == "Two Fingers":
-                display_text = "2"
-            cv2.putText(processed_frame, display_text, (10, 30), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+        if all_hand_data:
+            for i, hand_data in enumerate(all_hand_data):
+                landmarks = hand_data['landmarks']
+                handedness = hand_data['handedness']
+                gesture = detector.process_landmarks(landmarks)
+
+                if gesture:
+                    display_text = f'{handedness} Hand Gesture: {gesture}'
+                    if gesture == "Thumbs Up":
+                        display_text = f'{handedness} Hand: Good!'
+                    elif gesture == "One Finger":
+                        display_text = f'{handedness} Hand: 1'
+                    elif gesture == "Two Fingers":
+                        display_text = f'{handedness} Hand: 2'
+                    
+                    cv2.putText(processed_frame, display_text, (10, 30 + i * 40), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
         cv2.imshow('Hand Gesture Recognition', processed_frame)
 

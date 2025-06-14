@@ -15,7 +15,7 @@ SAMPLE_INTERVAL = 0.1 # Seconds between capturing each sample
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(
     static_image_mode=False,
-    max_num_hands=1,
+    max_num_hands=2,
     min_detection_confidence=0.7,
     min_tracking_confidence=0.5
 )
