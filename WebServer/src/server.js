@@ -1,10 +1,19 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
+const connectDB = require('./config/database');
+
+// Connect to database
+connectDB();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Middleware for parsing JSON and urlencoded data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, '../public')));
@@ -15,23 +24,16 @@ const server = http.createServer(app);
 // Create a WebSocket server attached to the HTTP server
 const wss = new WebSocket.Server({ server });
 
-wss.on('connection', ws => {
-    console.log('Client connected to WebSocket');
+// Import WebSocket handler
+const setupWebSocket = require('./websocketHandler');
+setupWebSocket(wss);
 
-    ws.on('message', message => {
-        console.log(`Received message from client: ${message}`);
-        // Echo message back to the client
-        ws.send(`Server received: ${message}`);
-    });
+// Import API routes
+const authRoutes = require('./routes/auth');
+const gameRoutes = require('./routes/game');
 
-    ws.on('close', () => {
-        console.log('Client disconnected from WebSocket');
-    });
-
-    ws.on('error', error => {
-        console.error('WebSocket error:', error);
-    });
-});
+app.use('/api/auth', authRoutes);
+app.use('/api/game', gameRoutes);
 
 // Basic route for the root URL, serving intro.html
 app.get('/', (req, res) => {
@@ -41,6 +43,12 @@ app.get('/', (req, res) => {
 // Route for the game page
 app.get('/game', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'game.html'));
+});
+
+// Basic error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
 });
 
 // Start the server

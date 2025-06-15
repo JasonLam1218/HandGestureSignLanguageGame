@@ -3,21 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hand Gesture Sign Language Game - Intro</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    <title>Sign Language Game - Intro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .buttons a {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1.1em;
+            margin: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .buttons a:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <div class="intro-container">
-        <h1>Welcome to the Hand Gesture Sign Language Game!</h1>
-        <p>Learn and practice sign language gestures in an interactive way.</p>
-        <p>Get ready to test your skills!</p>
-        <button id="startButton">Start Game</button>
+    <div class="container">
+        <h1>Welcome to the Sign Language Game!</h1>
+        <p>Learn and practice sign language by defeating monsters.</p>
+        <div class="buttons">
+            <a href="/game">Start Game</a>
+            <!-- You might add login/register links here later if needed directly on intro page -->
+        </div>
     </div>
-
-    <script>
-        document.getElementById('startButton').addEventListener('click', () => {
-            window.location.href = '/game'; // Redirect to the game page
-        });
-    </script>
 </body>
 </html> 
