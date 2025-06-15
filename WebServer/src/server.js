@@ -33,9 +33,14 @@ wss.on('connection', ws => {
     });
 });
 
-// Basic route for the root URL, serving index.html
+// Basic route for the root URL, serving intro.html
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public', 'index.html'));
+    res.sendFile(path.join(__dirname, '../public', 'intro.html'));
+});
+
+// Route for the game page
+app.get('/game', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'game.html'));
 });
 
 // Start the server

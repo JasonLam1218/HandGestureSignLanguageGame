@@ -31,3 +31,6 @@ function startGame() {
     console.log('Game started!');
     // Add your game initialization logic here
 }
+
+// This file would contain core game logic for the Unity WebGL build
+// (e.g., interactions with Unity, sending messages to Unity, if needed).

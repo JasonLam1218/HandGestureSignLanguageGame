@@ -1,5 +1,5 @@
-// This file handles WebSocket communication with the server,
-// specifically for data coming from/to Unity WebGL.
+// This file would contain client-side WebSocket specific logic for the Unity WebGL build
+// (e.g., establishing WebSocket connection, sending/receiving messages).
 
 const socket = new WebSocket('ws://localhost:3000'); // Ensure this matches your server's WebSocket URL
 
