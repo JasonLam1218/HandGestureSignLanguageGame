@@ -10,24 +10,13 @@
     <div class="game-container">
         <h1>Loading Game...</h1>
         <div id="unity-container" class="unity-container">
-            <canvas id="unity-canvas" style="background: #231F20"></canvas>
+            <canvas id="unity-canvas"></canvas>
         </div>
     </div>
     
+    <script src="Build/UnityGame.loader.js"></script>
     <script src="/js/main.js"></script>
     <script src="/js/websocket.js"></script>
-    <script src="Build/UnityGame.loader.js"></script>
-    <script>
-      var unityInstance = UnityLoader.instantiate("unity-container", "Build/UnityGame.json", {onProgress: UnityProgress});
-
-      function UnityProgress(unityInstance, progress) {
-        // You can implement a loading bar or progress indicator here
-        if (!unityInstance.Module) {
-          return;
-        }
-        console.log("Loading Unity: " + (progress * 100) + "%");
-        // Example: if (progress === 1) { document.getElementById('loading-overlay').style.display = 'none'; }
-      }
-    </script>
+    <script src="/js/unity_loader_script.js"></script>
 </body>
 </html> 
