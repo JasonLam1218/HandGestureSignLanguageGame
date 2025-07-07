@@ -4,8 +4,63 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
+// Input validation middleware
+const validateRegisterInput = (req, res, next) => {
+    const { username, email, password } = req.body;
+    
+    // Check if all required fields are present
+    if (!username || !email || !password) {
+        return res.status(400).json({ msg: 'Please provide username, email, and password' });
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ msg: 'Please provide a valid email address' });
+    }
+    
+    // Validate password strength
+    if (password.length < 6) {
+        return res.status(400).json({ msg: 'Password must be at least 6 characters long' });
+    }
+    
+    // Validate username length and characters
+    if (username.length < 3 || username.length > 30) {
+        return res.status(400).json({ msg: 'Username must be between 3 and 30 characters' });
+    }
+    
+    // Sanitize inputs (basic protection against injection)
+    if (typeof username !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
+        return res.status(400).json({ msg: 'Invalid input types' });
+    }
+    
+    next();
+};
+
+const validateLoginInput = (req, res, next) => {
+    const { email, password } = req.body;
+    
+    // Check if all required fields are present
+    if (!email || !password) {
+        return res.status(400).json({ msg: 'Please provide email and password' });
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ msg: 'Please provide a valid email address' });
+    }
+    
+    // Sanitize inputs
+    if (typeof email !== 'string' || typeof password !== 'string') {
+        return res.status(400).json({ msg: 'Invalid input types' });
+    }
+    
+    next();
+};
+
 // Register User
-router.post('/register', async (req, res) => {
+router.post('/register', validateRegisterInput, async (req, res) => {
     const { username, email, password } = req.body;
 
     try {
@@ -48,7 +103,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Login User
-router.post('/login', async (req, res) => {
+router.post('/login', validateLoginInput, async (req, res) => {
     const { email, password } = req.body;
 
     try {
